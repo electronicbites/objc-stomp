@@ -7,7 +7,7 @@
 //  See: http://stomp.codehaus.org/Protocol
 // 
 //  Requires the AsyncSocket library
-//  See: http://code.google.com/p/cocoaasyncsocket/
+//  See: https://github.com/robbiehanson/CocoaAsyncSocket
 //
 //  See: LICENSE
 //	Stefan Saasen <stefan@coravy.com>
