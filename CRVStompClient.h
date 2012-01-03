@@ -45,9 +45,12 @@ typedef enum {
 	NSString *sessionId;
 	BOOL doAutoconnect;
 	BOOL anonymous;
+	BOOL connected;
 }
 
 @property (nonatomic, assign) id<CRVStompClientDelegate> delegate;
+@property (nonatomic) BOOL connected;
+
 
 - (id)initWithHost:(NSString *)theHost 
 			  port:(NSUInteger)thePort 

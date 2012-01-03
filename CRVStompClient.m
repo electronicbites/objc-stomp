@@ -63,6 +63,7 @@
 @implementation CRVStompClient
 
 @synthesize delegate;
+@synthesize connected;
 @synthesize socket, host, port, login, passcode, sessionId;
 
 - (id)init {
@@ -73,7 +74,7 @@
 			  port:(NSUInteger)thePort 
 		  delegate:(id<CRVStompClientDelegate>)theDelegate
 	   autoconnect:(BOOL) autoconnect {
-	if(self = [self initWithHost:theHost port:thePort login:nil passcode:nil delegate:theDelegate autoconnect: NO]) {
+	if((self = [self initWithHost:theHost port:thePort login:nil passcode:nil delegate:theDelegate autoconnect: autoconnect])) {
 		anonymous = YES;
 	}
 	return self;
@@ -93,7 +94,7 @@
 		  passcode:(NSString *)thePasscode 
 		  delegate:(id<CRVStompClientDelegate>)theDelegate
 	   autoconnect:(BOOL) autoconnect {
-	if(self = [super init]) {
+	if((self = [super init])) {
 		
 		anonymous = NO;
 		doAutoconnect = autoconnect;
@@ -119,6 +120,7 @@
 #pragma mark -
 #pragma mark Public methods
 - (void)connect {
+    connected = TRUE;
 	if(anonymous) {
 		[self sendFrame:kCommandConnect];
 	} else {
@@ -134,6 +136,10 @@
 }
 
 - (void)subscribeToDestination:(NSString *)destination {
+    if (!connected) {
+        NSLog(@"CRVStompClient: ERROR: Cannot subscribe to destination because we are not conncted");
+        return;
+    }
 	[self subscribeToDestination:destination withAck: CRVStompAckModeAuto];
 }
 
@@ -212,7 +218,7 @@
 }
 
 - (void)receiveFrame:(NSString *)command headers:(NSDictionary *)headers body:(NSString *)body {
-	//NSLog(@"receiveCommand '%@' [%@], @%", command, headers, body);
+	NSLog(@"[CRVStompClient] CRVStompClient: receiveCommand '%@' [%@], @%", command, headers, body);
 	
 	// Connected
 	if([kResponseFrameConnected isEqual:command]) {
@@ -295,12 +301,14 @@
 }
 
 - (void)onSocketDidDisconnect:(AsyncSocket *)sock {
+    connected = FALSE;
 	if([[self delegate] respondsToSelector:@selector(stompClientDidDisconnect:)]) {
 		[[self delegate] stompClientDidDisconnect: self];
 	}
 }
 
-- (void)onSocket:(AsyncSocket *)sock willDisconnectWithError:(NSError *)err {
+- (void)onSocket:(AsyncSocket *)sock willDisconnectWithError:(NSError *)error {
+    NSLog(@"CRVStompClient FAIL - %@ %i: %@)", [error domain], [error code], [error localizedDescription]);
 }
 
 #pragma mark -
