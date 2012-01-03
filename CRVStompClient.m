@@ -15,7 +15,7 @@
 #import "CRVStompClient.h"
 
 #define kStompDefaultPort			61613
-#define kDefaultTimeout				5	//
+#define kDefaultTimeout				15	//
 
 
 // ============= http://stomp.codehaus.org/Protocol =============
