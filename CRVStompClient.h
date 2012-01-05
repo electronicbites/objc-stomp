@@ -15,9 +15,9 @@
 
 
 #import <Foundation/Foundation.h>
-#import "AsyncSocket.h"
 
 @class CRVStompClient;
+@class GCDAsyncSocket;
 
 typedef enum {
 	CRVStompAckModeAuto,
@@ -37,7 +37,7 @@ typedef enum {
 @interface CRVStompClient : NSObject {
 	@private
 	id<CRVStompClientDelegate> delegate;
-	AsyncSocket *socket;
+	GCDAsyncSocket *socket;
 	NSString *host;
 	NSUInteger port;
 	NSString *login;

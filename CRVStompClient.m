@@ -13,6 +13,7 @@
 //	Stefan Saasen <stefan@coravy.com>
 //  Based on StompService.{h,m} by Scott Raymond <sco@scottraymond.net>.
 #import "CRVStompClient.h"
+#import "GCDAsyncSocket.h"
 
 #define kStompDefaultPort			61613
 #define kDefaultTimeout				15	//
@@ -47,7 +48,7 @@
 
 @interface CRVStompClient()
 @property (nonatomic, assign) NSUInteger port;
-@property (nonatomic, retain) AsyncSocket *socket;
+@property (nonatomic, retain) GCDAsyncSocket *socket;
 @property (nonatomic, copy) NSString *host;
 @property (nonatomic, copy) NSString *login;
 @property (nonatomic, copy) NSString *passcode;
@@ -99,7 +100,7 @@
 		anonymous = NO;
 		doAutoconnect = autoconnect;
 		
-		AsyncSocket *theSocket = [[AsyncSocket alloc] initWithDelegate:self];
+		GCDAsyncSocket *theSocket = [[GCDAsyncSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
 		[self setSocket: theSocket];
 		[theSocket release];
 		
@@ -251,13 +252,21 @@
 }
 
 - (void)readFrame {
-	[[self socket] readDataToData:[AsyncSocket ZeroData] withTimeout:-1 tag:0];
+	[[self socket] readDataToData:[GCDAsyncSocket ZeroData] withTimeout:-1 tag:0];
 }
 
 #pragma mark -
 #pragma mark AsyncSocketDelegate
 
-- (void)onSocket:(AsyncSocket *)sock didReadData:(NSData*)data withTag:(long)tag {
+
+- (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(UInt16)port {
+	if(doAutoconnect) {
+		[self connect];
+	}
+}
+
+- (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag {
+    NSLog(@"socket:%p didReadData:withTag:%@", sock, tag);
 	NSData *strData = [data subdataWithRange:NSMakeRange(0, [data length])];
 	NSString *msg = [[NSString alloc] initWithData:strData encoding:NSUTF8StringEncoding];
     NSMutableArray *contents = (NSMutableArray *)[[msg componentsSeparatedByString:@"\n"] mutableCopy];
@@ -291,24 +300,16 @@
 	[contents release];
 }
 
-- (void)onSocket:(AsyncSocket *)sock didConnectToHost:(NSString *)host port:(UInt16)port {
-	if(doAutoconnect) {
-		[self connect];
-	}
+
+- (void)socket:(GCDAsyncSocket *)sock didWriteDataWithTag:(long)tag {
 }
 
-- (void)onSocket:(AsyncSocket *)sock didWriteDataWithTag:(long)tag {
-}
-
-- (void)onSocketDidDisconnect:(AsyncSocket *)sock {
+- (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)err {
     connected = FALSE;
+    // NSLog(@"CRVStompClient FAIL - %@ %i: %@)", [error domain], [error code], [error localizedDescription]);    
 	if([[self delegate] respondsToSelector:@selector(stompClientDidDisconnect:)]) {
 		[[self delegate] stompClientDidDisconnect: self];
 	}
-}
-
-- (void)onSocket:(AsyncSocket *)sock willDisconnectWithError:(NSError *)error {
-    NSLog(@"CRVStompClient FAIL - %@ %i: %@)", [error domain], [error code], [error localizedDescription]);
 }
 
 #pragma mark -
