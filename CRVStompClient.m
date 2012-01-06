@@ -96,7 +96,6 @@
 		  delegate:(id<CRVStompClientDelegate>)theDelegate
 	   autoconnect:(BOOL) autoconnect {
 	if((self = [super init])) {
-		
 		anonymous = NO;
 		doAutoconnect = autoconnect;
 		
@@ -109,11 +108,6 @@
 		[self setPort: thePort];
 		[self setLogin: theLogin];
 		[self setPasscode: thePasscode];
-		
-		NSError *err;
-		if(![self.socket connectToHost:self.host onPort:self.port error:&err]) {
-			NSLog(@"StompService error: %@", err);
-		}
 	}
 	return self;
 }
@@ -121,6 +115,10 @@
 #pragma mark -
 #pragma mark Public methods
 - (void)connect {
+    NSError *err;
+    if(![socket connectToHost:self.host onPort:self.port error:&err]) {
+        NSLog(@"StompService error: %@", err);
+    }
     connected = TRUE;
 	if(anonymous) {
 		[self sendFrame:kCommandConnect];
@@ -130,6 +128,13 @@
 	}
 	[self readFrame];
 }
+
+
+- (void)disconnect {
+	[self sendFrame:kCommandDisconnect];
+	[[self socket] disconnectAfterReadingAndWriting];
+}
+
 
 - (void)sendMessage:(NSString *)theMessage toDestination:(NSString *)destination {
 	NSDictionary *headers = [NSDictionary dictionaryWithObjectsAndKeys: destination, @"destination", nil];
@@ -190,10 +195,6 @@
     [self sendFrame:kCommandAck withHeader:headers andBody:nil];
 }
 
-- (void)disconnect {
-	[self sendFrame:kCommandDisconnect];
-	[[self socket] disconnectAfterReadingAndWriting];
-}
 
 
 #pragma mark -
