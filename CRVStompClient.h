@@ -73,7 +73,7 @@ typedef enum {
 		  delegate:(id<CRVStompClientDelegate>)theDelegate
 	   autoconnect:(BOOL) autoconnect;
 
-- (void)connect;
+- (void)loginToServer;
 - (void)sendMessage:(NSString *)theMessage toDestination:(NSString *)destination;
 - (void)subscribeToDestination:(NSString *)destination;
 - (void)subscribeToDestination:(NSString *)destination withAck:(CRVStompAckMode) ackMode;

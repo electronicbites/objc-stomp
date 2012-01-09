@@ -108,18 +108,19 @@
 		[self setPort: thePort];
 		[self setLogin: theLogin];
 		[self setPasscode: thePasscode];
+        NSError *err;
+        if(![socket connectToHost:self.host onPort:self.port error:&err]) {
+            NSLog(@"StompService error: %@", err);
+        }
 	}
 	return self;
 }
 
 #pragma mark -
 #pragma mark Public methods
-- (void)connect {
-    NSError *err;
-    if(![socket connectToHost:self.host onPort:self.port error:&err]) {
-        NSLog(@"StompService error: %@", err);
-    }
-    connected = TRUE;
+
+
+- (void)loginToServer {
 	if(anonymous) {
 		[self sendFrame:kCommandConnect];
 	} else {
@@ -220,7 +221,7 @@
 }
 
 - (void)receiveFrame:(NSString *)command headers:(NSDictionary *)headers body:(NSString *)body {
-	NSLog(@"[CRVStompClient] CRVStompClient: receiveCommand '%@' [%@], @%", command, headers, body);
+	NSLog(@"[CRVStompClient] CRVStompClient: receiveCommand '%@' [%@], %@", command, headers, body);
 	
 	// Connected
 	if([kResponseFrameConnected isEqual:command]) {
@@ -261,8 +262,9 @@
 
 
 - (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(UInt16)port {
-	if(doAutoconnect) {
-		[self connect];
+    connected = TRUE;
+    if (doAutoconnect) {
+		[self loginToServer];
 	}
 }
 
