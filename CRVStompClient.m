@@ -89,6 +89,13 @@
 	return [self initWithHost:theHost port:thePort login:theLogin passcode:thePasscode delegate:theDelegate autoconnect: NO];
 }
 
+- (void)connectToHost {
+    NSError *err;
+    if(![socket connectToHost:self.host onPort:self.port error:&err]) {
+        NSLog(@"StompService error: %@", err);
+    }
+}
+
 - (id)initWithHost:(NSString *)theHost 
 			  port:(NSUInteger)thePort 
 			 login:(NSString *)theLogin 
@@ -108,10 +115,6 @@
 		[self setPort: thePort];
 		[self setLogin: theLogin];
 		[self setPasscode: thePasscode];
-        NSError *err;
-        if(![socket connectToHost:self.host onPort:self.port error:&err]) {
-            NSLog(@"StompService error: %@", err);
-        }
 	}
 	return self;
 }
@@ -121,7 +124,7 @@
 
 
 - (void)loginToServer {
-	if(anonymous) {
+	if (anonymous) {
 		[self sendFrame:kCommandConnect];
 	} else {
 		NSDictionary *headers = [NSDictionary dictionaryWithObjectsAndKeys: [self login], @"login", [self passcode], @"passcode", nil];
@@ -225,6 +228,7 @@
 	
 	// Connected
 	if([kResponseFrameConnected isEqual:command]) {
+        connected = TRUE;
 		if([[self delegate] respondsToSelector:@selector(stompClientDidConnect:)]) {
 			[[self delegate] stompClientDidConnect:self];
 		}
@@ -262,7 +266,6 @@
 
 
 - (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(UInt16)port {
-    connected = TRUE;
     if (doAutoconnect) {
 		[self loginToServer];
 	}
@@ -273,7 +276,7 @@
 	NSData *strData = [data subdataWithRange:NSMakeRange(0, [data length])];
 	NSString *msg = [[NSString alloc] initWithData:strData encoding:NSUTF8StringEncoding];
     NSMutableArray *contents = (NSMutableArray *)[[msg componentsSeparatedByString:@"\n"] mutableCopy];
-	if([[contents objectAtIndex:0] isEqual:@""]) {
+	if ([[contents objectAtIndex:0] isEqual:@""]) {
 		[contents removeObjectAtIndex:0];
 	}
 	NSString *command = [[[contents objectAtIndex:0] copy] autorelease];
@@ -281,8 +284,8 @@
 	NSMutableString *body = [[[NSMutableString alloc] init] autorelease];
 	BOOL hasHeaders = NO;
     [contents removeObjectAtIndex:0];
-	for(NSString *line in contents) {
-		if(hasHeaders) {
+	for (NSString *line in contents) {
+		if (hasHeaders) {
 			[body appendString:line];
 		} else {
 			if ([line isEqual:@""]) {
