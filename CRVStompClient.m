@@ -224,7 +224,7 @@
 }
 
 - (void)receiveFrame:(NSString *)command headers:(NSDictionary *)headers body:(NSString *)body {
-	NSLog(@"[CRVStompClient] CRVStompClient: receiveCommand '%@' [%@], %@", command, headers, body);
+	if(GLOBAL_DEBUG_LEVEL > 10) NSLog(@"[CRVStompClient] CRVStompClient: receiveCommand '%@' [%@], %@", command, headers, body);
 	
 	// Connected
 	if([kResponseFrameConnected isEqual:command]) {
