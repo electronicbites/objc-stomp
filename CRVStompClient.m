@@ -224,7 +224,10 @@
 }
 
 - (void)receiveFrame:(NSString *)command headers:(NSDictionary *)headers body:(NSString *)body {
-	if(GLOBAL_DEBUG_LEVEL > 10) NSLog(@"[CRVStompClient] CRVStompClient: receiveCommand '%@' [%@], %@", command, headers, body);
+    
+#ifdef GLOBAL_DEBUG_LEVEL
+    if(GLOBAL_DEBUG_LEVEL >= 10) NSLog(@"[CRVStompClient] CRVStompClient: receiveCommand '%@' [%@], %@", command, headers, body);
+#endif
 	
 	// Connected
 	if([kResponseFrameConnected isEqual:command]) {
@@ -272,7 +275,11 @@
 }
 
 - (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag {
-    NSLog(@"socket:%p didReadData:withTag:%@", sock, tag);
+    
+#ifdef GLOBAL_DEBUG_LEVEL
+    if(GLOBAL_DEBUG_LEVEL >= 10) NSLog(@"socket:%p didReadData:withTag:%@", sock, tag);
+#endif
+    
 	NSData *strData = [data subdataWithRange:NSMakeRange(0, [data length])];
 	NSString *msg = [[NSString alloc] initWithData:strData encoding:NSUTF8StringEncoding];
     NSMutableArray *contents = (NSMutableArray *)[[msg componentsSeparatedByString:@"\n"] mutableCopy];
